@@ -10,7 +10,7 @@ No.: 2</br>
 Name: Sorting Algorithm Race</br>
 
 ## Team Name and Members
-Team Name: WolframSolo</br>
+Team Name: AlgoSolo</br>
 Members:
 * David Nguyen
 

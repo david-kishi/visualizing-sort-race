@@ -1,0 +1,15 @@
+body {
+    text-align: center;
+    color: #242424;
+    font-family: sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+canvas {
+    background-color: #ffffff;
+}
+
+.img-credit {
+    font-size: 9px;
+}

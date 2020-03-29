@@ -500,8 +500,6 @@ function gold_stepper(goldObj) {
             goldObj.swap = true;
         }
 
-        console.log(`${goldObj.arr[goldObj.pos]} - ${goldObj.arr[goldObj.pos + 1]}`)
-
         // Print the two values
         fill(goldObj.arr[goldObj.pos] * 10, goldObj.arr[goldObj.pos] * 10, goldObj.arr[goldObj.pos] * 100);
         square((20 * goldObj.pos) + 560, (20 * generation), 20);

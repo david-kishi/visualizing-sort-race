@@ -172,7 +172,7 @@ class _goldObj {
 }
 
 // Initiate Gold Pore Object
-var goldObj = new _goldObj(converted_input, 0, 0);
+var goldObj = new _goldObj(converted_input, 1, 1);
 
 function setup() // P5 Setup Fcn
 {

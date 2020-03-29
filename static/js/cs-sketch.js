@@ -4,11 +4,11 @@
 var g_canvas = {
     cell_size: 20,
     wid: 40,
-    hgt: 144
+    hgt: 80
 }; // JS Global var, w canvas size info.
 
 var g_frame_cnt = 0; // Setup a P5 display-frame counter, to do anim
-var g_frame_mod = 20; // Update ever 'mod' frames.
+var g_frame_mod = 1; // Update ever 'mod' frames.
 var g_stop = 0; // Go by default.
 var generation = 1;
 
@@ -101,7 +101,7 @@ var merge_stack = new _merge_stack();
 // Merge Object Class
 class _mergeObj {
     constructor(arr, par, step, s_pos) {
-        this.arr = arr;
+        this.arr = [...arr];
         this.left = [];
         this.right = [];
         this.parent = par;
@@ -111,18 +111,68 @@ class _mergeObj {
     }
 }
 
-// TODO Quick Sort Object
-var quickObj = {
-    finish: false
+// Quick Sort Step Object Stack Class
+class _quick_sort_stack {
+    constructor() {
+        this.items = [];
+        this.sorted_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        this.sorted_count = 0;
+        this.finish = false;
+    }
+
+    sort_fill(num, pos) {
+        this.sorted_arr[pos] = num;
+        this.sorted_count++;
+        if (this.sorted_count == 12) {
+            this.finish = true;
+        }
+        return this.finish;
+    }
+
+    push(item) {
+        this.items.push(item);
+    }
+
+    pop() {
+        this.items.pop();
+    }
+
+    next() {
+        return this.items[this.items.length - 1];
+    }
+
+    print() {
+        console.log("__________QUICK STACK_____________");
+        for (let i = 0; i < this.items.length; i++) {
+            console.log(this.items[i]);
+        }
+    }
+}
+
+// Initiate Quick Sort Step Object Stack
+var quick_stack = new _quick_sort_stack();
+
+// Quick Sort Object
+class _quickObj {
+    constructor(arr, s_pos) {
+        this.arr = [...arr];
+        this.s_pos = s_pos;
+    }
 }
 
 // Gold's Pore Object
-var goldObj = {
-    arr: [...converted_input],
-    finish: false,
-    s_pos: 0,
-    generation: 1
+class _goldObj {
+    constructor(arr, s_pos, pos) {
+        this.arr = [...arr];
+        this.s_pos = s_pos;
+        this.pos = pos;
+        this.finish = false;
+        this.swap = false;
+    }
 }
+
+// Initiate Gold Pore Object
+var goldObj = new _goldObj(converted_input, 0, 0);
 
 function setup() // P5 Setup Fcn
 {
@@ -171,7 +221,8 @@ function setup() // P5 Setup Fcn
     merge_stack.push(new _mergeObj(converted_input.slice(6, 12), merge_stack.items[0], "R", 6));
     merge_stack.push(new _mergeObj(converted_input.slice(0, 6), merge_stack.items[0], "L", 0));
 
-    // TODO Quick Sort Initiation
+    // Quick Sort Initiation
+    quick_stack.push(new _quickObj(converted_input, 0));
 }
 
 function merge_sort(Larr, Rarr) {
@@ -269,15 +320,12 @@ function merge_stepper(merge_stack) {
                 break;
 
             case "GL":
-                console.log("GL");
-                console.log(current.s_pos);
                 let tempGL = merge_sort(current.left, current.right);
                 current.parent.left = tempGL;
                 merge_stack.pop();
 
                 // Convert to Hex for printing
                 tempGL = convertHexDec(tempGL, "dec2hex");
-                console.log(tempGL);
                 // Print Glue Left
                 for (let i = 0; i < tempGL.length; i++) {
                     fill(current.parent.left[i] * 100, current.parent.left[i] * 10, current.parent.left[i] * 10);
@@ -325,40 +373,168 @@ function merge_stepper(merge_stack) {
     }
 }
 
+function quick_stepper(quick_stack) {
+    if (!quick_stack.finish) {
+        var current = quick_stack.next();
+
+        // Print array
+        // Convert dec to hex for printing
+        let temp = convertHexDec(current.arr, "dec2hex");
+
+        // Print current
+        for (let i = 0; i < temp.length; i++) {
+            if (i == j) {
+                fill('cyan');
+            } else {
+                fill(current.arr[i], current.arr[i] * 25, current.arr[i] * 15);
+            }
+            square((20 * (i + current.s_pos)) + 280, 20 * (3 * generation - 4) - 20, 20);
+            fill(255, 255, 255);
+            text(temp[i], (20 * (i + current.s_pos)) + 290, 20 * (3 * generation - 4) - 10);
+        }
+
+        // Check if array is only 1 variable
+        if (current.arr.length == 1) {
+            // Add variable to master array and check if finished
+            quick_stack.sort_fill(current.arr[0], current.s_pos);
+            fill('cyan');
+            square((20 * current.s_pos) + 280, 20 * (3 * generation - 4), 20);
+            fill(255, 255, 255);
+            text(current.arr[0].toString(16).toUpperCase(), (20 * current.s_pos) + 290, 20 * (3 * generation - 4) + 10);
+
+            quick_stack.pop();
+        } else {
+            var pivot = current.arr[0];
+            var i = 1;
+            var j = current.arr.length - 1;
+
+            for (i; i <= j; i++) {
+                if (pivot < current.arr[i]) {
+                    for (j; j >= i; j--) {
+                        if (current.arr[j] <= pivot) {
+                            // Perform swap
+                            let temp = current.arr[j];
+                            current.arr[j] = current.arr[i];
+                            current.arr[i] = temp;
+
+                            // Print swap with random matching color
+                            colorR = Math.floor(Math.random() * 255);
+                            colorG = Math.floor(Math.random() * 255);
+                            colorB = Math.floor(Math.random() * 255);
+                            fill(colorR, colorG, colorB);
+                            square((20 * (i + current.s_pos)) + 280, 20 * (3 * generation - 4), 20);
+                            fill(255, 255, 255);
+                            text(current.arr[i].toString(16).toUpperCase(), (20 * (i + current.s_pos)) + 290, 20 * (3 * generation - 4) + 10);
+                            fill(colorR, colorG, colorB);
+                            square((20 * (j + current.s_pos)) + 280, 20 * (3 * generation - 4), 20);
+                            fill(255, 255, 255);
+                            text(current.arr[j].toString(16).toUpperCase(), (20 * (j + current.s_pos)) + 290, 20 * (3 * generation - 4) + 10);
+
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Swap pivot with last location
+            let temp = current.arr[0];
+            current.arr[0] = current.arr[j];
+            current.arr[j] = temp;
+
+            // Convert dec to hex for printing
+            temp = convertHexDec(current.arr, "dec2hex");
+
+            // Print result
+            for (let k = 0; k < temp.length; k++) {
+                if (k == j) {
+                    fill('cyan');
+                } else {
+                    fill(current.arr[k], current.arr[k] * 25, current.arr[k] * 15);
+                }
+                square((20 * (k + current.s_pos)) + 280, 20 * (3 * generation - 4) + 20, 20);
+                fill(255, 255, 255);
+                text(temp[k], (20 * (k + current.s_pos)) + 290, 20 * (3 * generation - 4) + 30);
+            }
+
+            // Add variable to master array
+            quick_stack.sort_fill(pivot, current.s_pos + j);
+
+            // Make left and right objects and add to stack
+            quick_stack.pop();
+            if (!quick_stack.finish) {
+
+                if (j != current.arr.length && j + 1 != current.arr.length) {
+                    quick_stack.push(new _quickObj(current.arr.slice(j + 1, current.arr.length), current.s_pos + j + 1));
+                }
+
+                if (j != 0) {
+                    quick_stack.push(new _quickObj(current.arr.slice(0, j), current.s_pos));
+                }
+
+            }
+        }
+
+        // Check if finished
+        if (quick_stack.finish) {
+            // Convert dec to hex for printing
+            let temp = convertHexDec(quick_stack.sorted_arr, "dec2hex");
+
+            // Print final result
+            for (let i = 0; i < temp.length; i++) {
+                fill(quick_stack.sorted_arr[i], quick_stack.sorted_arr[i] * 25, quick_stack.sorted_arr[i] * 15);
+                square((20 * i) + 280, 20 * (3 * generation - 4) + 40, 20);
+                fill(255, 255, 255);
+                text(temp[i], (20 * i) + 290, 20 * (3 * generation - 4) + 50);
+            }
+        }
+    }
+}
+
 function gold_stepper(goldObj) {
     if (!goldObj.finish) {
-        var swap = false;
+        // Swap
+        if (goldObj.arr[goldObj.pos] > goldObj.arr[goldObj.pos + 1]) {
+            let temp = goldObj.arr[goldObj.pos + 1];
+            goldObj.arr[goldObj.pos + 1] = goldObj.arr[goldObj.pos];
+            goldObj.arr[goldObj.pos] = temp;
+            goldObj.swap = true;
+        }
 
-        // Traverse through array and run swaps
-        for (let i = goldObj.s_pos; i < 12 - goldObj.s_pos; i++) {
-            if (goldObj.arr[i + 1] < goldObj.arr[i]) {
-                let b = goldObj.arr[i + 1];
-                goldObj.arr[i + 1] = goldObj.arr[i];
-                goldObj.arr[i] = b;
-                swap = true;
+        console.log(`${goldObj.arr[goldObj.pos]} - ${goldObj.arr[goldObj.pos + 1]}`)
+
+        // Print the two values
+        fill(goldObj.arr[goldObj.pos] * 10, goldObj.arr[goldObj.pos] * 10, goldObj.arr[goldObj.pos] * 100);
+        square((20 * goldObj.pos) + 560, (20 * generation), 20);
+        fill(255, 255, 255);
+        text(goldObj.arr[goldObj.pos].toString(16).toUpperCase(), (20 * goldObj.pos) + 570, (20 * generation) + 10);
+
+        fill(goldObj.arr[goldObj.pos + 1] * 10, goldObj.arr[goldObj.pos + 1] * 10, goldObj.arr[goldObj.pos + 1] * 100);
+        square((20 * (goldObj.pos + 1)) + 560, (20 * generation), 20);
+        fill(255, 255, 255);
+        text(goldObj.arr[goldObj.pos + 1].toString(16).toUpperCase(), (20 * (goldObj.pos + 1)) + 570, (20 * generation) + 10);
+
+        // Check if reached end.
+        if (goldObj.pos + 2 == goldObj.arr.length || goldObj.pos + 2 == goldObj.arr.length - 1) {
+            // Check swap flag
+            if (!goldObj.swap) {
+                goldObj.finish = true;
+                // Print entire array
+                let temp = convertHexDec(goldObj.arr, "dec2hex");
+                for (let i = 0; i < 12; i++) {
+                    fill(goldObj.arr[i] * 10, goldObj.arr[i] * 10, goldObj.arr[i] * 100);
+                    square((20 * i) + 560, (20 * generation), 20);
+                    fill(255, 255, 255);
+                    text(temp[i], (20 * i) + 570, (20 * generation) + 10);
+                }
+            } else if (!goldObj.s_pos) {
+                goldObj.swap = false;
+                goldObj.s_pos = goldObj.pos = 1;
+            } else {
+                goldObj.swap = false;
+                goldObj.s_pos = goldObj.pos = 0;
             }
-            i++;
-        }
-
-        // Swap starting position
-        if (goldObj.s_pos == 1) {
-            goldObj.s_pos = 0;
         } else {
-            goldObj.s_pos = 1;
-        }
-
-        // Check finish flag
-        if (!swap) {
-            goldObj.finish = true;
-        }
-
-        // Populate row
-        let temp = convertHexDec(goldObj.arr, "dec2hex");
-        for (let i = 0; i < 12; i++) {
-            fill(goldObj.arr[i] * 10, goldObj.arr[i] * 10, goldObj.arr[i] * 100);
-            square((20 * i) + 560, (20 * generation), 20);
-            fill(255, 255, 255);
-            text(temp[i], (20 * i) + 570, (20 * generation) + 10);
+            goldObj.pos += 2;
         }
     }
 }
@@ -366,6 +542,7 @@ function gold_stepper(goldObj) {
 function draw_update() // Update our display.
 {
     generation++;
+    quick_stepper(quick_stack);
     merge_stepper(merge_stack);
     gold_stepper(goldObj);
 }
